@@ -15,7 +15,8 @@ public class TypeConverter implements Converter {
     public Object convert(Object value, Class target) {
         if (value == null) return null;
         if (value.getClass().equals(LocalDateTime.class) && target.equals(Long.class)){
-            return System.currentTimeMillis();
+           // 转换后返回
+            return null;
         }
         return null;
     }
