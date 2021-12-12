@@ -40,14 +40,14 @@ public class UserDTO {
     private Long time;
 }
 ```
- - 常规使用
+ ### 常规使用
  ```java
 UserDO source = new UserDO();
 UserDTO target = new UserDTO();
 BeanUtilsCopier copier = FastBeanUtils.create(source.getClass(), target.getClass());
 copier.copy(source,target,null);
 ```
-- List
+### List
 ```java
 BeanUtilsCopier copier = FastBeanUtils.create(source.getClass(), target.getClass()); // 此步耗时,不建议放到循环
 for (UserDO userDO : UserDOS) {
@@ -55,7 +55,7 @@ UserDTO target = new UserDTO();
 copier.copy(source,target,null);
 }
 ```
-- 属性映射、属性忽略
+### 属性映射、属性忽略
 > UserDO中username需要赋值到UserDTO中的name上。
 ```java
 // 属性映射
@@ -67,7 +67,7 @@ set.add("id");
 BeanUtilsCopier copier = FastBeanUtils.create(source.getClass(), target.getClass(), map, set); 
 
 ```
-- 自定义转换器
+### 自定义转换器
 > UserDO中是LocalDateTime,UserDO中是Long,如果未定义属性转换器,将会set NULL。
 
 ```java
@@ -91,7 +91,7 @@ public class TypeConverter
     }
 }
 ```
-- lambda支持
+### lambda支持
 > 习惯了lambda,此操作较耗时
 ```java
 // 属性映射
