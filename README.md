@@ -1,13 +1,16 @@
 # fastbean
 
 #### 介绍
-> fastbean基于cglib。默认支持同名同类型(含包装类)属性赋值,不同名需要设置nameMapping，字段忽略需要设置ignoreSet，
+> fastbean基于cglib。一个快速的基于字节码的映射，它不依赖反射来操作Bean。
+> 
+> 默认支持同名同类型(含包装类)属性赋值,不同名需要设置nameMapping，字段忽略需要设置ignoreSet，
 > 类型不同需要设置类型转换链(默认set NULL)。
 ## 特点
 - 基于字节码技术。
 - 属性名映射,属性忽略。
 
 - 支持自定义转换链，当前只支持类型不一致才会调用。
+- 泛型安全检查  
 - 代理类缓存,多次调用效率更高。
 - 支持基本类型与包装类型之间转换。
 - 支持lambda表达式
@@ -44,12 +47,12 @@ public class UserDTO {
  ```java
 UserDO source = new UserDO();
 UserDTO target = new UserDTO();
-BeanUtilsCopier copier = FastBeanUtils.create(source.getClass(), target.getClass());
+FastBeanCopier copier = FastBeanUtils.create(source.getClass(), target.getClass());
 copier.copy(source,target,null);
 ```
 ### List
 ```java
-BeanUtilsCopier copier = FastBeanUtils.create(source.getClass(), target.getClass()); // 此步耗时,不建议放到循环
+FastBeanCopier copier = FastBeanUtils.create(source.getClass(), target.getClass()); // 此步耗时,不建议放到循环
 for (UserDO userDO : UserDOS) {
 UserDTO target = new UserDTO();
 copier.copy(source,target,null);
@@ -64,7 +67,7 @@ map.put("name","username");
 // 字段忽略 忽略UserDTO中id赋值
 HashSet<String> set = new HashSet<>();
 set.add("id");
-BeanUtilsCopier copier = FastBeanUtils.create(source.getClass(), target.getClass(), map, set); 
+FastBeanCopier copier = FastBeanUtils.create(source.getClass(), target.getClass(), map, set); 
 
 ```
 ### 自定义转换器
@@ -85,6 +88,7 @@ public class TypeConverter
     public Object convert(Object value, Class target) {
         if (value == null) return null; 
         if (value.getClass().equals(LocalDateTime.class) && target.equals(Long.class)) {
+            // 返回你需要的处理
             return Long.valueOf(System.currentTimeMillis());
         }
         return null;
@@ -100,7 +104,7 @@ mappingWrapper.add(UserDTO::getName, UserDO::getUsername);
 // 字段忽略 忽略UserDTO中id赋值
 LambdaIgnoreWrapper<UserDTO> ignoreWrapper = new LambdaIgnoreWrapper<>();
 ignoreWrapper.add(UserDTO::getId);
-BeanUtilsCopier copier = FastBeanUtils.create(source.getClass(), target.getClass(), mappingWrapper, ignoreWrapper);
+FastBeanCopier copier = FastBeanUtils.create(source.getClass(), target.getClass(), mappingWrapper, ignoreWrapper);
 ```
 # 性能比较
 > 基于spring stopWatch 进行性能比较，mapstruct肯定比不过。
