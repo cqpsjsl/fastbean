@@ -26,7 +26,9 @@ public class DefaultConverterChain implements ConverterChain{
         for (Converter converter : convertChain) {
             o = converter.convert(o, target);
         }
-        return this.convertChain.isEmpty()? null : o;
+        if (o == null) return o;
+        if (o == value) return null;
+        return target.isAssignableFrom(o.getClass()) ? o : null;
     }
     @Override
     public ConverterChain add(Converter converter) {

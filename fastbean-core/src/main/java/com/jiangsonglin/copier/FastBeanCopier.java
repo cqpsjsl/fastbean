@@ -17,15 +17,34 @@ public class FastBeanCopier {
     BeanUtilsCopier copier;
     private ConverterChain converterChain = new DefaultConverterChain().add(new DefaultConverter());
 
+     protected FastBeanCopier() {
+    }
+
     /**
-     * 不带转换器copy
+     * 默认转换器copy
      * @param from
      * @param to
      */
     public void copy(Object from, Object to) {
         copier.copy(from, to, this.converterChain);
     }
-
+    /**
+     * 默认转换器copy
+     * @param from
+     * @param toClazz
+     */
+    public <T> T copy(Object from, Class<T> toClazz) {
+        try {
+            T t = toClazz.newInstance();
+            copier.copy(from, t, this.converterChain);
+            return t;
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
     /**
      * 在默认转换器链上新增转换器
      * @param from

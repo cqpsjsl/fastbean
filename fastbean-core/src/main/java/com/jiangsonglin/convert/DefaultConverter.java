@@ -17,6 +17,6 @@ public class DefaultConverter implements Converter {
         if (value instanceof Enum && target.equals(String.class)) {
             return ((Enum<?>) value).name();
         }
-        return null;
+        return value;
     }
 }
