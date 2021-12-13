@@ -10,13 +10,12 @@ import java.time.LocalDateTime;
  * @author jiangsonglin
  * @date 2021/12/10
  */
-public class TypeConverter implements Converter {
+public class DefaultConverter implements Converter {
     @Override
     public Object convert(Object value, Class target) {
         if (value == null) return null;
-        if (value.getClass().equals(LocalDateTime.class) && target.equals(Long.class)){
-           // 转换后返回
-            return null;
+        if (value instanceof Enum && target.equals(String.class)) {
+            return ((Enum<?>) value).name();
         }
         return null;
     }

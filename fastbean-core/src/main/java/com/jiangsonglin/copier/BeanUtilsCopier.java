@@ -8,6 +8,7 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.security.ProtectionDomain;
@@ -39,7 +40,7 @@ public abstract class BeanUtilsCopier {
         Object newInstance(String source, String target, HashMap<String, String> nameMapping, Set<String> ignoreSet);
     }
 
-    public static BeanUtilsCopier create(Class source, Class target, HashMap<String, String> nameMapping, Set<String> ignoreSet) {
+    public static FastBeanCopier create(Class source, Class target, HashMap<String, String> nameMapping, Set<String> ignoreSet) {
         Generator gen = new Generator();
         gen.setSource(source);
         gen.setTarget(target);
@@ -106,9 +107,11 @@ public abstract class BeanUtilsCopier {
             return ReflectUtils.getProtectionDomain(source);
         }
 
-        public BeanUtilsCopier create() {
+        public FastBeanCopier create() {
             Object key = KEY_FACTORY.newInstance(source.getName(), target.getName(), nameMapping, ignoreSet);
-            return ((BeanUtilsCopier) super.create(key));
+            FastBeanCopier copier = new FastBeanCopier();
+            copier.copier = ((BeanUtilsCopier) super.create(key));
+            return copier;
         }
 
 
@@ -168,7 +171,7 @@ public abstract class BeanUtilsCopier {
                     // if type not equals
                     Type setterType = write.getSignature().getArgumentTypes()[0];
                     Type returnType = read.getSignature().getReturnType();
-                    if (!returnType.getClassName().equals(setterType.getClassName())) {
+                    if (!getter.getReadMethod().getGenericReturnType().getTypeName().equals(setter.getWriteMethod().getGenericParameterTypes()[0].getTypeName())) {
                         // packing?
                         Class packingClass = packing(setter.getPropertyType(), getter.getPropertyType());
                         if (packingClass != null) {

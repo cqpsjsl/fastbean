@@ -1,6 +1,7 @@
 package com.jiangsonglin.beans;
 
 import com.jiangsonglin.copier.BeanUtilsCopier;
+import com.jiangsonglin.copier.FastBeanCopier;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2021/12/11
  */
 public class FastBeanUtils {
-    private final static Map<String, BeanUtilsCopier> BEAN_COPY_CACHE = new ConcurrentHashMap<>();
+    private final static Map<String, FastBeanCopier> BEAN_COPY_CACHE = new ConcurrentHashMap<>();
 
     /**
      * 创建一个copier
@@ -25,7 +26,7 @@ public class FastBeanUtils {
      * @param targetClass 目标class对象
      * @return
      */
-    public static BeanUtilsCopier create(Class srcClass, Class targetClass) {
+    public static FastBeanCopier create(Class srcClass, Class targetClass) {
         return creates(srcClass, targetClass, null, null);
     }
 
@@ -38,7 +39,7 @@ public class FastBeanUtils {
      * @param ignoreSet   字段忽略集合
      * @return
      */
-    public static BeanUtilsCopier create(Class srcClass, Class targetClass, HashMap<String, String> nameMapping, Set<String> ignoreSet) {
+    public static FastBeanCopier create(Class srcClass, Class targetClass, HashMap<String, String> nameMapping, Set<String> ignoreSet) {
         return creates(srcClass, targetClass, nameMapping, ignoreSet);
     }
 
@@ -51,12 +52,12 @@ public class FastBeanUtils {
      * @param ignoreWrapper      字段忽略wrapper对象
      * @return
      */
-    public static BeanUtilsCopier create(Class srcClass, Class targetClass, LambdaNameMappingWrapper nameMappingWrapper
+    public static FastBeanCopier create(Class srcClass, Class targetClass, LambdaNameMappingWrapper nameMappingWrapper
             , LambdaIgnoreWrapper ignoreWrapper) {
         return creates(srcClass, targetClass, nameMappingWrapper == null ? null : nameMappingWrapper.nameMap, ignoreWrapper == null ? null : ignoreWrapper.ignoreSet);
     }
 
-    private static BeanUtilsCopier creates(Class srcClass, Class targetClass, HashMap<String, String> nameMapping, Set<String> ignoreSet) {
+    private static FastBeanCopier creates(Class srcClass, Class targetClass, HashMap<String, String> nameMapping, Set<String> ignoreSet) {
         String key = srcClass.getName() + "$" + targetClass.getName();
         if (nameMapping != null && !nameMapping.isEmpty()) {
             key = key + "$" + nameMapping.hashCode();
@@ -65,7 +66,7 @@ public class FastBeanUtils {
             key = key + "$" + ignoreSet.hashCode();
         }
 
-        BeanUtilsCopier copier = BEAN_COPY_CACHE.get(key);
+        FastBeanCopier copier = BEAN_COPY_CACHE.get(key);
         if (copier == null) {
             copier = BeanUtilsCopier.create(srcClass, targetClass, nameMapping, ignoreSet);
             BEAN_COPY_CACHE.put(key, copier);
