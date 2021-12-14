@@ -27,9 +27,9 @@ public abstract class BeanUtilsCopier {
     private static final BeanUtilsCopier.BeanCopierKey KEY_FACTORY =
             (BeanUtilsCopier.BeanCopierKey) KeyFactory.create(BeanUtilsCopier.BeanCopierKey.class);
     private static final Type CONVERTER =
-            TypeUtils.parseType("ConverterChain");
+            TypeUtils.parseType("com.jiangsonglin.fastbean.convert.ConverterChain");
     private static final Type BEAN_COPIER =
-            TypeUtils.parseType("BeanUtilsCopier");
+            TypeUtils.parseType("com.jiangsonglin.fastbean.copier.BeanUtilsCopier");
     private static final Signature COPY =
             new Signature("copy", Type.VOID_TYPE, new Type[]{Constants.TYPE_OBJECT, Constants.TYPE_OBJECT, CONVERTER});
     private static final Signature CONVERT =
