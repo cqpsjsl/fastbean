@@ -1,4 +1,4 @@
-package com.jiangsonglin.interfaces;
+package com.jiangsonglin.fastbean.interfaces;
 
 import java.io.Serializable;
 import java.util.function.Consumer;

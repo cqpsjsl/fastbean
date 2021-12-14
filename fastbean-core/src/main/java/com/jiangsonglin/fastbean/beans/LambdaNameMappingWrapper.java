@@ -1,7 +1,7 @@
-package com.jiangsonglin.beans;
+package com.jiangsonglin.fastbean.beans;
 
-import com.jiangsonglin.interfaces.JConsumer;
-import com.jiangsonglin.utils.LambdaUtils;
+import com.jiangsonglin.fastbean.interfaces.JConsumer;
+import com.jiangsonglin.fastbean.utils.LambdaUtils;
 
 import java.util.HashMap;
 

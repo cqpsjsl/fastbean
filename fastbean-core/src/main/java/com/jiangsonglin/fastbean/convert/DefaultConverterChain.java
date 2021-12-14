@@ -1,4 +1,4 @@
-package com.jiangsonglin.convert;
+package com.jiangsonglin.fastbean.convert;
 
 import java.util.ArrayList;
 import java.util.List;

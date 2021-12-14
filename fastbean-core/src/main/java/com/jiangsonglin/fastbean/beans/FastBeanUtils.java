@@ -1,7 +1,7 @@
-package com.jiangsonglin.beans;
+package com.jiangsonglin.fastbean.beans;
 
-import com.jiangsonglin.copier.BeanUtilsCopier;
-import com.jiangsonglin.copier.FastBeanCopier;
+import com.jiangsonglin.fastbean.copier.BeanUtilsCopier;
+import com.jiangsonglin.fastbean.copier.FastBeanCopier;
 
 import java.util.HashMap;
 import java.util.Map;

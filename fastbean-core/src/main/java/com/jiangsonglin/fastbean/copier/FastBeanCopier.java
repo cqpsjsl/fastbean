@@ -1,9 +1,9 @@
-package com.jiangsonglin.copier;
+package com.jiangsonglin.fastbean.copier;
 
-import com.jiangsonglin.convert.Converter;
-import com.jiangsonglin.convert.ConverterChain;
-import com.jiangsonglin.convert.DefaultConverter;
-import com.jiangsonglin.convert.DefaultConverterChain;
+import com.jiangsonglin.fastbean.convert.Converter;
+import com.jiangsonglin.fastbean.convert.ConverterChain;
+import com.jiangsonglin.fastbean.convert.DefaultConverter;
+import com.jiangsonglin.fastbean.convert.DefaultConverterChain;
 
 /**
  * <p>

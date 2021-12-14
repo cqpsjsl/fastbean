@@ -3,15 +3,11 @@ package com.fastbean.example;
 import com.fastbean.example.entity.TypeName;
 import com.fastbean.example.entity.UserDO;
 import com.fastbean.example.entity.UserDTO;
-import com.jiangsonglin.beans.FastBeanUtils;
-import com.jiangsonglin.beans.LambdaNameMappingWrapper;
-import com.jiangsonglin.convert.Converter;
-import com.jiangsonglin.copier.BeanUtilsCopier;
-import com.jiangsonglin.copier.FastBeanCopier;
-import junit.framework.TestCase;
+import com.jiangsonglin.fastbean.beans.FastBeanUtils;
+import com.jiangsonglin.fastbean.beans.LambdaNameMappingWrapper;
+import com.jiangsonglin.fastbean.copier.FastBeanCopier;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

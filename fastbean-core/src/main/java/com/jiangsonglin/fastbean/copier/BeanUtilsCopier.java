@@ -1,14 +1,13 @@
-package com.jiangsonglin.copier;
+package com.jiangsonglin.fastbean.copier;
 
-import com.jiangsonglin.convert.ConverterChain;
-import com.jiangsonglin.convert.DefaultConverterChain;
+import com.jiangsonglin.fastbean.convert.ConverterChain;
+import com.jiangsonglin.fastbean.convert.DefaultConverterChain;
 import net.sf.cglib.core.*;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 
 import java.beans.PropertyDescriptor;
-import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.security.ProtectionDomain;
@@ -28,9 +27,9 @@ public abstract class BeanUtilsCopier {
     private static final BeanUtilsCopier.BeanCopierKey KEY_FACTORY =
             (BeanUtilsCopier.BeanCopierKey) KeyFactory.create(BeanUtilsCopier.BeanCopierKey.class);
     private static final Type CONVERTER =
-            TypeUtils.parseType("com.jiangsonglin.convert.ConverterChain");
+            TypeUtils.parseType("ConverterChain");
     private static final Type BEAN_COPIER =
-            TypeUtils.parseType("com.jiangsonglin.copier.BeanUtilsCopier");
+            TypeUtils.parseType("BeanUtilsCopier");
     private static final Signature COPY =
             new Signature("copy", Type.VOID_TYPE, new Type[]{Constants.TYPE_OBJECT, Constants.TYPE_OBJECT, CONVERTER});
     private static final Signature CONVERT =

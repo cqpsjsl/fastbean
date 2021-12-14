@@ -1,6 +1,6 @@
-package com.jiangsonglin.utils;
+package com.jiangsonglin.fastbean.utils;
 
-import com.jiangsonglin.interfaces.JConsumer;
+import com.jiangsonglin.fastbean.interfaces.JConsumer;
 
 import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.InvocationTargetException;
