@@ -16,6 +16,15 @@
 - 支持基本类型与包装类型之间转换。
 - 支持lambda表达式
 ## 使用方式
+### maven
+```xml
+<dependency>
+    <groupId>io.github.cqpsjsl</groupId>
+    <artifactId>fastbean</artifactId>
+    <version>1.1</version>
+</dependency>
+
+```
 > UserDO
 
 ```java
