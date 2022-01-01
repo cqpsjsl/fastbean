@@ -21,7 +21,7 @@
 <dependency>
     <groupId>io.github.cqpsjsl</groupId>
     <artifactId>fastbean</artifactId>
-    <version>1.1</version>
+    <version>1.3</version>
 </dependency>
 
 ```
