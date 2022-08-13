@@ -4,7 +4,6 @@ import com.jiangsonglin.fastbean.convert.Converter;
 import com.jiangsonglin.fastbean.convert.ConverterChain;
 import com.jiangsonglin.fastbean.copier.FastBeanCopier;
 import com.jiangsonglin.fastbean.interfaces.JConsumer;
-import com.sun.tools.javac.util.Assert;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -91,9 +90,12 @@ public class FastBeanCopierChain<S, T> {
      * @return
      */
     public T copy() {
-        Assert.checkNonNull(srcObject, "srcObject cant not be null");
-        Assert.checkNonNull(targetObject, "targetObject cant not be null");
-
+        if (srcObject == null) {
+            throw new NullPointerException("srcObject cant not be null");
+        }
+        if (targetObject == null) {
+            throw new NullPointerException("targetObject cant not be null");
+        }
         FastBeanCopier fastBeanCopier = FastBeanCopierHelper.create(srcObject.getClass(), targetObject.getClass(), nameMappingWrapper, ignoreWrapper);
         if (partConverterChain != null) {
             fastBeanCopier.copy(srcObject, targetObject, partConverterChain);
