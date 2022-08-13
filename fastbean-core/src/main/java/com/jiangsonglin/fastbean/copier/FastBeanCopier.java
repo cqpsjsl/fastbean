@@ -2,7 +2,6 @@ package com.jiangsonglin.fastbean.copier;
 
 import com.jiangsonglin.fastbean.convert.Converter;
 import com.jiangsonglin.fastbean.convert.ConverterChain;
-import com.jiangsonglin.fastbean.convert.DefaultConverter;
 import com.jiangsonglin.fastbean.convert.DefaultConverterChain;
 
 /**
@@ -15,8 +14,10 @@ import com.jiangsonglin.fastbean.convert.DefaultConverterChain;
  */
 public class FastBeanCopier {
     BeanUtilsCopier copier;
-    private ConverterChain converterChain = new DefaultConverterChain().add(new DefaultConverter());
-
+    /**
+     * 转换器链，默认是一个空的链，可参考@{@link DefaultConverterChain} 实现, 替换该对象的转换器链使用@{@link #setConverterChain(ConverterChain)}
+     */
+    private ConverterChain converterChain = new DefaultConverterChain();
      protected FastBeanCopier() {
     }
 
@@ -46,20 +47,29 @@ public class FastBeanCopier {
         return null;
     }
     /**
-     * 在默认转换器链上新增转换器
+     * 在默认转换器链上新增转换器(不影响到全局)
      * @param from
      * @param to
-     * @param converters
+     * @param converters 局部的转换器，不会影响到全局
      */
     public void copy(Object from, Object to, Converter... converters) {
+        ConverterChain copy = this.converterChain.copy();
         for (Converter converter : converters) {
-            this.converterChain.add(converter);
+            copy.add(converter);
         }
-        copier.copy(from, to, this.converterChain);
+        copier.copy(from, to, copy);
     }
-
     /**
-     *  定义自己的转换器, 默认转换器将会失效
+     * 单次转换器链路，全局转换链会失效
+     * @param from
+     * @param to
+     * @param partConverterChain 局部转换器链
+     */
+    public void copy(Object from, Object to, ConverterChain partConverterChain) {
+        copier.copy(from, to, partConverterChain);
+    }
+    /**
+     *  定义自己的转换器, 默认转换器将会失效，对该对象全局生效
      * @param converterChain
      */
     public void setConverterChain(ConverterChain converterChain) {

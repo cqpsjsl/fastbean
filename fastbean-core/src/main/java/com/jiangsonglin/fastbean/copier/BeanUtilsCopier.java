@@ -109,6 +109,7 @@ public abstract class BeanUtilsCopier {
         public FastBeanCopier create() {
             Object key = KEY_FACTORY.newInstance(source.getName(), target.getName(), nameMapping, ignoreSet);
             FastBeanCopier copier = new FastBeanCopier();
+            setNamePrefix(target.getName());
             copier.copier = ((BeanUtilsCopier) super.create(key));
             return copier;
         }

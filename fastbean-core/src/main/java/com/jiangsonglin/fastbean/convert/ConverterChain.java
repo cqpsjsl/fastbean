@@ -22,4 +22,10 @@ public interface ConverterChain {
      * @param converter
      */
     ConverterChain add(Converter converter);
+
+    /**
+     * 返回一个副本，不会影响到当前的
+     * @return
+     */
+    ConverterChain copy();
 }

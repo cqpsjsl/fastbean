@@ -21,7 +21,7 @@
 <dependency>
     <groupId>io.github.cqpsjsl</groupId>
     <artifactId>fastbean</artifactId>
-    <version>1.3</version>
+    <version>2.0</version>
 </dependency>
 
 ```
@@ -55,38 +55,28 @@ public class UserDTO {
 ```
  ### 常规使用
  ```java
-UserDO source = new UserDO();
-UserDTO target = new UserDTO();
-FastBeanCopier copier = FastBeanUtils.create(source.getClass(), target.getClass());
-copier.copy(source,target,null);
+BeanCopyUtil.copy(userDO, userDTO);
 ```
 ### List
 ```java
-FastBeanCopier copier = FastBeanUtils.create(source.getClass(), target.getClass()); // 此步耗时,不建议放到循环
-for (UserDO userDO : UserDOS) {
-UserDTO target = new UserDTO();
-copier.copy(source,target,null);
-}
+List<UserDTO> userDTOS = BeanCopyUtil.copyList(list, UserDO.class, UserDTO.class);
 ```
 ### 属性映射、属性忽略
 > UserDO中username需要赋值到UserDTO中的name上。
 ```java
 // 属性映射
-HashMap<String, String> map = new HashMap<>();
-map.put("name","username");
-// 字段忽略 忽略UserDTO中id赋值
-HashSet<String> set = new HashSet<>();
-set.add("id");
-FastBeanCopier copier = FastBeanUtils.create(source.getClass(), target.getClass(), map, set); 
+        BeanCopyUtil.chain(userDO,userDTO)
+                .nameMapping(UserDTO::getName, UserDO::getUsername)
+                .copy();
 
 ```
 ### 自定义转换器
 > UserDO中是LocalDateTime,UserDO中是Long,如果未定义属性转换器,将会set NULL。
 
 ```java
-DefaultConverterChain converterChain = new DefaultConverterChain();
-converterChain.add(new TypeConverter());
-copier.copy(source,target,converterChain);
+        BeanCopyUtil.chain(userDO,userDTO)
+        .converter(new EnumConverter())
+        .copy();
 
 ```
 > TypeConverter

@@ -8,7 +8,7 @@ package com.jiangsonglin.fastbean.convert;
  * @author jiangsonglin
  * @date 2021/12/10
  */
-public class DefaultConverter implements Converter {
+public class EnumConverter implements Converter {
     @Override
     public Object convert(Object value, Class target) {
         if (value == null) return null;

@@ -3,6 +3,7 @@ package com.jiangsonglin.fastbean.beans;
 import com.jiangsonglin.fastbean.copier.BeanUtilsCopier;
 import com.jiangsonglin.fastbean.copier.FastBeanCopier;
 
+import java.lang.ref.SoftReference;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -16,8 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author jiangsonglin
  * @date 2021/12/11
  */
-public class FastBeanUtils {
-    private final static Map<String, FastBeanCopier> BEAN_COPY_CACHE = new ConcurrentHashMap<>();
+public class FastBeanCopierHelper {
+    private final static Map<String, SoftReference<FastBeanCopier>> BEAN_COPY_CACHE = new ConcurrentHashMap<>();
 
     /**
      * 创建一个copier
@@ -46,6 +47,7 @@ public class FastBeanUtils {
     /**
      * 创建一个copier,支持lambda进行属性映射和字段忽略
      * 相对比较耗时
+     *
      * @param srcClass           源class对象
      * @param targetClass        属性映射对象
      * @param nameMappingWrapper 属性映射wrapper对象
@@ -66,11 +68,12 @@ public class FastBeanUtils {
             key = key + "$" + ignoreSet.hashCode();
         }
 
-        FastBeanCopier copier = BEAN_COPY_CACHE.get(key);
-        if (copier == null) {
-            copier = BeanUtilsCopier.create(srcClass, targetClass, nameMapping, ignoreSet);
-            BEAN_COPY_CACHE.put(key, copier);
+        SoftReference<FastBeanCopier> softReference = BEAN_COPY_CACHE.get(key);
+        if (softReference == null) {
+            FastBeanCopier copier = BeanUtilsCopier.create(srcClass, targetClass, nameMapping, ignoreSet);
+            BEAN_COPY_CACHE.put(key, new SoftReference<>(copier));
+            return copier;
         }
-        return copier;
+        return softReference.get();
     }
 }
