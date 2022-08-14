@@ -3,6 +3,7 @@ package com.fastbean.example;
 import com.fastbean.example.entity.TypeName;
 import com.fastbean.example.entity.UserDO;
 import com.fastbean.example.entity.UserDTO;
+import com.jiangsonglin.fastbean.convert.DefaultConverterChain;
 import com.jiangsonglin.fastbean.convert.EnumConverter;
 import com.jiangsonglin.fastbean.utils.BeanCopyUtil;
 import net.sf.cglib.core.DebuggingClassWriter;
@@ -32,9 +33,12 @@ public class DemoTest {
     public void common() {
         UserDO userDO = getUserDO();
         UserDTO userDTO = new UserDTO();
+        // 方式一
         BeanCopyUtil.copy(userDO, userDTO);
-        BeanCopyUtil.copy(userDO, userDTO);
+        // 方式二
+        UserDTO copy = BeanCopyUtil.copy(userDO, UserDTO.class);
         Assert.assertEquals(userDO.getId(), userDTO.getId());
+        Assert.assertEquals(userDO.getId(), copy.getId());
     }
 
     /**
@@ -47,6 +51,7 @@ public class DemoTest {
         UserDO userDO = getUserDO();
         userDO.setType(TypeName.TEST_NAME);
         UserDTO userDTO = new UserDTO();
+        // 可增加枚举处理
         BeanCopyUtil.chain(userDO,userDTO)
                 .converter(new EnumConverter())
                 .copy();
@@ -116,9 +121,18 @@ public class DemoTest {
         UserDO userDO = getUserDO();
         // name
         UserDTO userDTO = new UserDTO();
-        BeanCopyUtil.chain(userDO,userDTO)
-                .nameMapping(UserDTO::getName, UserDO::getUsername)
-                .copy();
+        BeanCopyUtil.chain(userDO,userDTO) // 开启链式调用
+                .nameMapping(UserDTO::getName, UserDO::getUsername) // 字段映射（可选）
+                .nameMapping(UserDTO::getId, UserDO::getIds) // 字段映射（可选）
+                .ignore(UserDTO::getAddress) // 字段忽略(可选
+                .converterChain(new DefaultConverterChain()) // 自定义转换器链（可选）
+                .converter(new EnumConverter()) // 往转换器(自定义/默认) 添加转换器 （可选）
+                .copy(); // 复制
+        BeanCopyUtil.chain(userDO,userDTO) // 开启链式调用
+                .nameMapping(UserDTO::getName, UserDO::getUsername) // 字段映射（可选）
+                .converterChain(new DefaultConverterChain()) // 自定义转换器链（可选）
+                .converter(new EnumConverter()) // 往转换器(自定义/默认) 添加转换器 （可选）
+                .copy(); // 复制
         Assert.assertEquals(userDO.getUsername(), userDTO.getName());
     }
 

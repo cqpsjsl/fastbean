@@ -11,11 +11,26 @@
 - 属性名映射,属性忽略。
 
 - 支持自定义转换链，当前只支持类型不一致才会调用。
-- 泛型安全检查  
-- 代理类缓存,多次调用效率更高。
-- 支持基本类型与包装类型之间转换。
-- 支持lambda表达式
+- 泛型安全检查
+- 支持基本类型与包装类型之间转换。int <-> Integer
+- 优雅的链式调用
+```java
+BeanCopyUtil.chain(userDO,userDTO) // 开启链式调用
+        .nameMapping(UserDTO::getName, UserDO::getUsername) // 字段映射（可选）
+        .nameMapping(UserDTO::getId, UserDO::getIds) // 字段映射（可选）
+        .ignore(UserDTO::getAddress) // 字段忽略(可选
+        .converterChain(new DefaultConverterChain()) // 自定义转换器链（可选）
+        .converter(new EnumConverter()) // 往转换器(自定义/默认) 添加转换器 （可选）
+        .copy(); // 复制
+```
 ## 使用方式
+### 查看生成文件
+执行fastbean之前执行，查看cglib生成的代理类
+```java
+System.setProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY, "./proxyOutput");
+```
+![img.png](img.png)
+![img_1.png](img_1.png)
 ### maven
 ```xml
 <dependency>
@@ -65,18 +80,18 @@ List<UserDTO> userDTOS = BeanCopyUtil.copyList(list, UserDO.class, UserDTO.class
 > UserDO中username需要赋值到UserDTO中的name上。
 ```java
 // 属性映射
-        BeanCopyUtil.chain(userDO,userDTO)
-                .nameMapping(UserDTO::getName, UserDO::getUsername)
-                .copy();
+BeanCopyUtil.chain(userDO,userDTO)
+        .nameMapping(UserDTO::getName, UserDO::getUsername)
+        .copy();
 
 ```
 ### 自定义转换器
 > UserDO中是LocalDateTime,UserDO中是Long,如果未定义属性转换器,将会set NULL。
 
 ```java
-        BeanCopyUtil.chain(userDO,userDTO)
-        .converter(new EnumConverter())
-        .copy();
+    BeanCopyUtil.chain(userDO,userDTO)
+    .converter(new EnumConverter())
+    .copy();
 
 ```
 > TypeConverter
@@ -94,17 +109,6 @@ public class TypeConverter
         return null;
     }
 }
-```
-### lambda支持
-> 习惯了lambda,此操作较耗时
-```java
-// 属性映射
-LambdaNameMappingWrapper<UserDTO, UserDO> mappingWrapper = new LambdaNameMappingWrapper<>();
-mappingWrapper.add(UserDTO::getName, UserDO::getUsername);
-// 字段忽略 忽略UserDTO中id赋值
-LambdaIgnoreWrapper<UserDTO> ignoreWrapper = new LambdaIgnoreWrapper<>();
-ignoreWrapper.add(UserDTO::getId);
-FastBeanCopier copier = FastBeanUtils.create(source.getClass(), target.getClass(), mappingWrapper, ignoreWrapper);
 ```
 # 性能比较
 > 基于spring stopWatch 进行性能比较，mapstruct肯定比不过。
