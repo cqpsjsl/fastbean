@@ -4,6 +4,8 @@ import com.jiangsonglin.fastbean.convert.Converter;
 import com.jiangsonglin.fastbean.convert.ConverterChain;
 import com.jiangsonglin.fastbean.copier.FastBeanCopier;
 import com.jiangsonglin.fastbean.interfaces.JConsumer;
+import com.jiangsonglin.fastbean.strategy.FastBeanStrategy;
+import com.jiangsonglin.fastbean.strategy.StrategyConstant;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,6 +29,14 @@ public class FastBeanCopierChain<S, T> {
      */
     private ConverterChain partConverterChain = null;
     private List<Converter> partConverterList = new ArrayList<>();
+    /**
+     * 能设置NULL
+     */
+    private Integer setNullStrategy = null;
+    /**
+     * 存在值时能被覆盖
+     */
+    private Integer coverStrategy = null;
 
     public FastBeanCopierChain(S srcObject, T targetObject) {
         this.srcObject = srcObject;
@@ -83,7 +93,22 @@ public class FastBeanCopierChain<S, T> {
         }
         return this;
     }
-
+    /**
+     * 能够被设置为NULL，默认不能。（不影响全局）
+     * @return
+     */
+    public FastBeanCopierChain<S, T> canSetNull() {
+        this.setNullStrategy = StrategyConstant.CAN_SET_NULL;
+        return this;
+    }
+    /**
+     * 能够被覆盖，默认不能。（不影响全局）
+     * @return
+     */
+    public FastBeanCopierChain<S, T> canCover() {
+        this.coverStrategy = StrategyConstant.CAN_SET_COVER;
+        return this;
+    }
     /**
      * 复制
      *
@@ -97,12 +122,23 @@ public class FastBeanCopierChain<S, T> {
             throw new NullPointerException("targetObject cant not be null");
         }
         FastBeanCopier fastBeanCopier = FastBeanCopierHelper.create(srcObject.getClass(), targetObject.getClass(), nameMappingWrapper, ignoreWrapper);
+        FastBeanStrategy partStrategy = null;
+        // 局部自定义
+        if (coverStrategy != null || setNullStrategy != null) {
+            partStrategy = new FastBeanStrategy();
+            if (coverStrategy != null) {
+                partStrategy.coverStrategy = coverStrategy;
+            }
+            if (setNullStrategy != null) {
+                partStrategy.setNullStrategy = setNullStrategy;
+            }
+        }
         if (partConverterChain != null) {
-            fastBeanCopier.copy(srcObject, targetObject, partConverterChain);
+            fastBeanCopier.copy(srcObject, targetObject, partStrategy, partConverterChain);
         } else if (!partConverterList.isEmpty()) {
-            fastBeanCopier.copy(srcObject, targetObject, partConverterList.toArray(new Converter[0]));
+            fastBeanCopier.copy(srcObject, targetObject, partStrategy, partConverterList.toArray(new Converter[0]));
         } else {
-            fastBeanCopier.copy(srcObject, targetObject);
+            fastBeanCopier.copy(srcObject, targetObject, partStrategy);
         }
         return targetObject;
     }

@@ -2,6 +2,7 @@ package com.jiangsonglin.fastbean.copier;
 
 import com.jiangsonglin.fastbean.convert.ConverterChain;
 import com.jiangsonglin.fastbean.convert.DefaultConverterChain;
+import com.jiangsonglin.fastbean.strategy.FastBeanStrategy;
 import net.sf.cglib.core.*;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Label;
@@ -28,10 +29,12 @@ public abstract class BeanUtilsCopier {
             (BeanUtilsCopier.BeanCopierKey) KeyFactory.create(BeanUtilsCopier.BeanCopierKey.class);
     private static final Type CONVERTER =
             TypeUtils.parseType("com.jiangsonglin.fastbean.convert.ConverterChain");
+    private static final Type STRATEGY =
+            TypeUtils.parseType("com.jiangsonglin.fastbean.strategy.FastBeanStrategy");
     private static final Type BEAN_COPIER =
             TypeUtils.parseType("com.jiangsonglin.fastbean.copier.BeanUtilsCopier");
     private static final Signature COPY =
-            new Signature("copy", Type.VOID_TYPE, new Type[]{Constants.TYPE_OBJECT, Constants.TYPE_OBJECT, CONVERTER});
+            new Signature("copy", Type.VOID_TYPE, new Type[]{Constants.TYPE_OBJECT, Constants.TYPE_OBJECT, CONVERTER, STRATEGY});
     private static final Signature CONVERT =
             TypeUtils.parseSignature("Object convert(Object, Class)");
 
@@ -53,8 +56,9 @@ public abstract class BeanUtilsCopier {
      * @param from 源对象
      * @param to 目标对象
      * @param converterChain 转换器链 可为空 {@link DefaultConverterChain}
+     * @param fastBeanStrategy bean策略
      */
-    abstract public void copy(Object from, Object to, ConverterChain converterChain);
+    abstract public void copy(Object from, Object to, ConverterChain converterChain, FastBeanStrategy fastBeanStrategy);
 
     public static class Generator extends AbstractClassGenerator {
         private static final Source SOURCE = new Source(BeanUtilsCopier.class.getName());
@@ -130,7 +134,16 @@ public abstract class BeanUtilsCopier {
             EmitUtils.null_constructor(ce);
             CodeEmitter e = ce.begin_method(Constants.ACC_PUBLIC, COPY, null);
             PropertyDescriptor[] getters = ReflectUtils.getBeanGetters(source);
+            PropertyDescriptor[] targetGetters = ReflectUtils.getBeanGetters(target);
             PropertyDescriptor[] setters = ReflectUtils.getBeanSetters(target);
+            // 策略方法
+            MethodInfo strategyInfo = null;
+            try {
+                Method setValue = ReflectUtils.findDeclaredMethod(FastBeanStrategy.class, "handleStrategy", new Class[]{Object.class, Object.class});
+                 strategyInfo = ReflectUtils.getMethodInfo(setValue);
+            } catch (NoSuchMethodException noSuchMethodException) {
+                noSuchMethodException.printStackTrace();
+            }
 
             Map names = new HashMap(getters.length);
             for (int i = 0; i < getters.length; i++) {
@@ -144,18 +157,6 @@ public abstract class BeanUtilsCopier {
             e.load_arg(0);
             e.checkcast(sourceType);
             e.store_local(sourceLocal);
-            e.load_arg(2);
-            Label nonNull = e.make_label();
-            e.ifnonnull(nonNull);
-            Label end = e.make_label();
-            e.visitLabel(end);
-            Type type = Type.getType(DefaultConverterChain.class);
-            e.new_instance(type);
-            e.dup();
-            e.invoke_constructor(type);
-            e.visitVarInsn(Constants.ASTORE, 3);
-            e.visitLabel(nonNull);
-            e.visitFrame(Constants.F_NEW, 0, null, 0, null);
             for (int i = 0; i < setters.length; i++) {
                 PropertyDescriptor setter = setters[i];
                 // ignore
@@ -164,6 +165,13 @@ public abstract class BeanUtilsCopier {
                 if (nameMapping != null && (getNameKey = nameMapping.get(setter.getName())) == null) {
                     getNameKey = setter.getName();
                 }
+                // target的getter
+                PropertyDescriptor targetGetter = null;
+                for (PropertyDescriptor target : targetGetters) {
+                    if (target.getName().equals(setter.getName())) {
+                        targetGetter = target;
+                    }
+                }
                 PropertyDescriptor getter = (PropertyDescriptor) names.get(getNameKey);
                 if (getter != null) {
                     MethodInfo read = ReflectUtils.getMethodInfo(getter.getReadMethod());
@@ -171,6 +179,22 @@ public abstract class BeanUtilsCopier {
                     // if type not equals
                     Type setterType = write.getSignature().getArgumentTypes()[0];
                     Type returnType = read.getSignature().getReturnType();
+                    // 策略
+                    e.load_arg(3);
+                    e.load_local(sourceLocal);
+                    e.invoke(read);
+                    if (targetGetter == null) {
+                        // 不存在getter,按照null
+                        e.aconst_null();
+                    } else {
+                        e.load_local(targetLocal);
+                        e.invoke(ReflectUtils.getMethodInfo(targetGetter.getReadMethod()));
+                    }
+                    e.invoke(strategyInfo);
+                    Label nonNull2 = e.make_label();
+                    e.ifnull(nonNull2);
+                    Label end1 = e.make_label();
+                    e.visitLabel(end1);
                     if (!getter.getReadMethod().getGenericReturnType().getTypeName().equals(setter.getWriteMethod().getGenericParameterTypes()[0].getTypeName())) {
                         // packing?
                         Class packingClass = packing(setter.getPropertyType(), getter.getPropertyType());
@@ -212,6 +236,8 @@ public abstract class BeanUtilsCopier {
                         e.invoke(read);
                         e.invoke(write);
                     }
+                    // 策略end
+                    e.visitLabel(nonNull2);
                 }
             }
             e.return_value();
