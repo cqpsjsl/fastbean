@@ -1,5 +1,7 @@
 package com.jiangsonglin.fastbean.convert;
 
+import java.util.List;
+
 /**
  * <p>
  * 执行链
@@ -22,6 +24,12 @@ public interface ConverterChain {
      * @param converter
      */
     ConverterChain add(Converter converter);
+
+    /**
+     * 获得当前所有的转换器
+     * @return
+     */
+    List<Converter> getAllConverter();
 
     /**
      * 返回一个副本，不会影响到当前的

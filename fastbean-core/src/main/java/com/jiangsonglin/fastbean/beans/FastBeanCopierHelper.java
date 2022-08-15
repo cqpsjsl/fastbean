@@ -7,7 +7,6 @@ import java.lang.ref.SoftReference;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * <p>
@@ -18,7 +17,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2021/12/11
  */
 public class FastBeanCopierHelper {
-    private final static Map<String, SoftReference<FastBeanCopier>> BEAN_COPY_CACHE = new ConcurrentHashMap<>();
+    /**
+     * 缓存，为什么不用ConcurrentHashMap,
+     */
+    private final static Map<String, SoftReference<FastBeanCopier>> BEAN_COPY_CACHE = new HashMap<>();
 
     /**
      * 创建一个copier
@@ -60,14 +62,18 @@ public class FastBeanCopierHelper {
     }
 
     private static FastBeanCopier creates(Class srcClass, Class targetClass, HashMap<String, String> nameMapping, Set<String> ignoreSet) {
-        String key = srcClass.getName() + "$" + targetClass.getName();
+        StringBuffer buffer = new StringBuffer(srcClass.getName());
+        buffer.append("$");
+        buffer.append(targetClass.getName());
         if (nameMapping != null && !nameMapping.isEmpty()) {
-            key = key + "$" + nameMapping.hashCode();
+            buffer.append("$");
+            buffer.append(nameMapping.hashCode());
         }
         if (ignoreSet != null && !ignoreSet.isEmpty()) {
-            key = key + "$" + ignoreSet.hashCode();
+            buffer.append("$");
+            buffer.append(ignoreSet.hashCode());
         }
-
+        String key = buffer.toString();
         SoftReference<FastBeanCopier> softReference = BEAN_COPY_CACHE.get(key);
         if (softReference == null) {
             FastBeanCopier copier = BeanUtilsCopier.create(srcClass, targetClass, nameMapping, ignoreSet);

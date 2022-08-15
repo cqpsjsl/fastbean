@@ -39,6 +39,16 @@ public class DefaultConverterChain implements ConverterChain {
     }
 
     /**
+     * 获得当前所有的转换器
+     *
+     * @return
+     */
+    @Override
+    public List<Converter> getAllConverter() {
+        return this.convertChain;
+    }
+
+    /**
      * 返回一个副本，不会影响到当前的
      *
      * @return

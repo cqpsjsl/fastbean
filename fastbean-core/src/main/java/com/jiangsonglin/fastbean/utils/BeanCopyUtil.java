@@ -32,8 +32,9 @@ public class BeanCopyUtil {
      * @param
      * @param <T>
      */
-    public static <T> void copy(Object form, T targetObj) {
+    public static <T> T copy(Object form, T targetObj) {
         FastBeanCopierHelper.create(form.getClass(), targetObj.getClass()).copy(form, targetObj);
+        return targetObj;
     }
 
     /**

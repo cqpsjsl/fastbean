@@ -15,9 +15,9 @@ import com.jiangsonglin.fastbean.convert.DefaultConverterChain;
 public class FastBeanCopier {
     BeanUtilsCopier copier;
     /**
-     * 转换器链，默认是一个空的链，可参考@{@link DefaultConverterChain} 实现, 替换该对象的转换器链使用@{@link #setConverterChain(ConverterChain)}
+     * 转换器链，默认是一个空的链，可参考@{@link DefaultConverterChain} 实现, 替换全局的转换器链使用@{@link #setGlobalConverterChain(ConverterChain)}
      */
-    private ConverterChain converterChain = new DefaultConverterChain();
+     private static ConverterChain globalConverterChain = new DefaultConverterChain();
      protected FastBeanCopier() {
     }
 
@@ -27,7 +27,7 @@ public class FastBeanCopier {
      * @param to
      */
     public void copy(Object from, Object to) {
-        copier.copy(from, to, this.converterChain);
+        copier.copy(from, to, FastBeanCopier.globalConverterChain);
     }
     /**
      * 默认转换器copy
@@ -37,7 +37,7 @@ public class FastBeanCopier {
     public <T> T copy(Object from, Class<T> toClazz) {
         try {
             T t = toClazz.newInstance();
-            copier.copy(from, t, this.converterChain);
+            copier.copy(from, t, FastBeanCopier.globalConverterChain);
             return t;
         } catch (InstantiationException e) {
             e.printStackTrace();
@@ -53,7 +53,7 @@ public class FastBeanCopier {
      * @param converters 局部的转换器，不会影响到全局
      */
     public void copy(Object from, Object to, Converter... converters) {
-        ConverterChain copy = this.converterChain.copy();
+        ConverterChain copy = FastBeanCopier.globalConverterChain.copy();
         for (Converter converter : converters) {
             copy.add(converter);
         }
@@ -69,10 +69,10 @@ public class FastBeanCopier {
         copier.copy(from, to, partConverterChain);
     }
     /**
-     *  定义自己的转换器, 默认转换器将会失效，对该对象全局生效
-     * @param converterChain
+     *  定义自己的全局转换器, 默认转换器将会失效，对该对象全局生效
+     * @param globalConverterChain
      */
-    public void setConverterChain(ConverterChain converterChain) {
-        this.converterChain = converterChain;
+    public static synchronized void setGlobalConverterChain(ConverterChain globalConverterChain) {
+        FastBeanCopier.globalConverterChain = globalConverterChain;
     }
 }
