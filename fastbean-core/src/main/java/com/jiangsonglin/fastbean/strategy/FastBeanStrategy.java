@@ -5,7 +5,7 @@ package com.jiangsonglin.fastbean.strategy;
  * @version 2.0.1
  * @©copyright
  */
-public class FastBeanStrategy {
+public final class FastBeanStrategy {
 
     /**
      * 设置空值策略
@@ -36,5 +36,9 @@ public class FastBeanStrategy {
         return true;
     }
 
+    public Object deepCopy(Object obj) {
+        System.out.println("进入深拷贝");
+        return obj;
+    }
 }
 

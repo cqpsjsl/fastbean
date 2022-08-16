@@ -52,10 +52,11 @@ public abstract class BeanUtilsCopier {
     }
 
     /**
-     *  复制对象 浅拷贝
-     * @param from 源对象
-     * @param to 目标对象
-     * @param converterChain 转换器链 可为空 {@link DefaultConverterChain}
+     * 复制对象 浅拷贝
+     *
+     * @param from             源对象
+     * @param to               目标对象
+     * @param converterChain   转换器链 可为空 {@link DefaultConverterChain}
      * @param fastBeanStrategy bean策略
      */
     abstract public void copy(Object from, Object to, ConverterChain converterChain, FastBeanStrategy fastBeanStrategy);
@@ -140,7 +141,7 @@ public abstract class BeanUtilsCopier {
             MethodInfo strategyInfo = null;
             try {
                 Method setValue = ReflectUtils.findDeclaredMethod(FastBeanStrategy.class, "handleStrategy", new Class[]{Object.class, Object.class});
-                 strategyInfo = ReflectUtils.getMethodInfo(setValue);
+                strategyInfo = ReflectUtils.getMethodInfo(setValue);
             } catch (NoSuchMethodException noSuchMethodException) {
                 noSuchMethodException.printStackTrace();
             }
@@ -170,6 +171,7 @@ public abstract class BeanUtilsCopier {
                 for (PropertyDescriptor target : targetGetters) {
                     if (target.getName().equals(setter.getName())) {
                         targetGetter = target;
+                        break;
                     }
                 }
                 PropertyDescriptor getter = (PropertyDescriptor) names.get(getNameKey);
@@ -183,43 +185,81 @@ public abstract class BeanUtilsCopier {
                     e.load_arg(3);
                     e.load_local(sourceLocal);
                     e.invoke(read);
+                    // 如果是基本类型 需要装箱
+                    // 基元类型
+                    if (getter.getPropertyType().isPrimitive()) {
+                        // 获取装箱方法
+                        Method method = boxingMethod(getter.getPropertyType());
+                        Class typeClazz = getTypeClazz(Type.getType(getter.getPropertyType()));
+                        if (method != null && typeClazz != null) {
+                            Signature signature = ReflectUtils.getMethodInfo(method).getSignature();
+                            // 获取包装类信息
+                            // 获取包装类的type
+                            Type type = Type.getType(typeClazz);
+                            e.invoke_static(type, signature, false);
+                        }
+                    }
                     if (targetGetter == null) {
                         // 不存在getter,按照null
                         e.aconst_null();
                     } else {
                         e.load_local(targetLocal);
                         e.invoke(ReflectUtils.getMethodInfo(targetGetter.getReadMethod()));
+                        // 基元类型
+                        if (targetGetter.getPropertyType().isPrimitive()) {
+                            // 获取装箱方法
+                            Method method = boxingMethod(targetGetter.getPropertyType());
+                            Class typeClazz = getTypeClazz(Type.getType(targetGetter.getPropertyType()));
+                            if (method != null && typeClazz != null) {
+                                Signature signature = ReflectUtils.getMethodInfo(method).getSignature();
+                                // 获取包装类信息
+                                // 获取包装类的type
+                                Type type = Type.getType(typeClazz);
+                                e.invoke_static(type, signature, false);
+                            }
+                        }
                     }
                     e.invoke(strategyInfo);
                     Label nonNull2 = e.make_label();
                     e.ifnull(nonNull2);
                     Label end1 = e.make_label();
                     e.visitLabel(end1);
-                    if (!getter.getReadMethod().getGenericReturnType().getTypeName().equals(setter.getWriteMethod().getGenericParameterTypes()[0].getTypeName())) {
+                    if (!getter.getReadMethod().getGenericReturnType().getTypeName()
+                            .equals(setter.getWriteMethod().getGenericParameterTypes()[0].getTypeName())) {
                         // packing?
-                        Class packingClass = packing(setter.getPropertyType(), getter.getPropertyType());
-                        if (packingClass != null) {
-                            String methodName;
+                        if (isPacking(setter.getPropertyType(), getter.getPropertyType())) {
+                            // 装箱拆箱
                             if (getter.getPropertyType().isPrimitive()) {
-                                // packing
-                                methodName = "valueOf";
-                            }else {
-                                // split
-                                methodName = setterType.getClassName()+"Value";
+                                // 装箱 valueOf
+                                Method method = boxingMethod(getter.getPropertyType());
+                                Class typeClazz = getTypeClazz(Type.getType(getter.getPropertyType()));
+                                if (method != null && typeClazz != null) {
+                                    Signature signature = ReflectUtils.getMethodInfo(method).getSignature();
+                                    // 获取包装类信息
+                                    // 获取包装类的type
+                                    Type type = Type.getType(typeClazz);
+                                    e.load_local(targetLocal);
+                                    e.load_local(sourceLocal);
+                                    e.invoke(read);
+                                    e.invoke_static(type, signature, false);
+                                    e.invoke(write);
+                                }
+                            } else {
+                                // 拆箱
+                                String unboxingMethodString = unboxingMethodString(getter.getPropertyType());
+                                try {
+                                    Method valueOf = ReflectUtils.findDeclaredMethod(getter.getPropertyType(), unboxingMethodString, null);
+                                    MethodInfo methodInfo = ReflectUtils.getMethodInfo(valueOf);
+                                    // 进行拆箱
+                                    e.load_local(targetLocal);
+                                    e.load_local(sourceLocal);
+                                    e.invoke(read);
+                                    e.invoke(methodInfo);
+                                    e.invoke(write);
+                                } catch (NoSuchMethodException ex) {
+                                    ex.printStackTrace();
+                                }
                             }
-                            Method member = null;
-                            try {
-                                member = packingClass.getMethod(methodName);
-                            } catch (NoSuchMethodException noSuchMethodException) {
-                                continue;
-                                //noSuchMethodException.printStackTrace();
-                            }
-                            MethodInfo methodInfo = ReflectUtils.getMethodInfo(member);
-                            e.load_local(targetLocal);
-                            e.load_local(sourceLocal);
-                            e.invoke(read);
-                            e.invoke(methodInfo);
-                            e.invoke(write);
                         } else {
                             e.load_local(targetLocal);
                             e.load_arg(2);
@@ -230,11 +270,30 @@ public abstract class BeanUtilsCopier {
                             e.checkcast(setterType);
                             e.invoke(write);
                         }
-                    } else if (compatible(getter, setter)) {
-                        e.load_local(targetLocal);
-                        e.load_local(sourceLocal);
-                        e.invoke(read);
-                        e.invoke(write);
+                    } else {
+                        // 深拷贝
+                        // 非基本类型
+                        if (!setter.getPropertyType().isPrimitive() && !getter.getPropertyType().isPrimitive()) {
+                            MethodInfo deepCopy = null;
+                            try {
+                                Method setValue = ReflectUtils.findDeclaredMethod(FastBeanStrategy.class, "deepCopy", new Class[]{Object.class});
+                                deepCopy = ReflectUtils.getMethodInfo(setValue);
+                                e.load_local(targetLocal);
+                                e.load_arg(3);
+                                e.load_local(sourceLocal);
+                                e.invoke(read);
+                                e.invoke(deepCopy);
+                                e.checkcast(setterType);
+                                e.invoke(write);
+                            } catch (NoSuchMethodException noSuchMethodException) {
+                                noSuchMethodException.printStackTrace();
+                            }
+                        } else {
+                            e.load_local(targetLocal);
+                            e.load_local(sourceLocal);
+                            e.invoke(read);
+                            e.invoke(write);
+                        }
                     }
                     // 策略end
                     e.visitLabel(nonNull2);
@@ -245,14 +304,49 @@ public abstract class BeanUtilsCopier {
             ce.end_class();
         }
 
-        private Class packing(Class<?> setterClass, Class<?> returnClass) {
-            if (setterClass.isPrimitive()){
-                return getTypeClazz(Type.getType(setterClass));
-            }else {
-                 return getTypeClazz(Type.getType(returnClass));
+        /**
+         * 是否是装箱拆箱
+         *
+         * @param setterClass
+         * @param returnClass
+         * @return
+         */
+        private boolean isPacking(Class<?> setterClass, Class<?> returnClass) {
+            if (setterClass.isPrimitive()) {
+                return returnClass.equals(getTypeClazz(Type.getType(setterClass)));
+            } else {
+                Class typeClazz = getTypeClazz(Type.getType(returnClass));
+                return typeClazz != null && typeClazz.equals(setterClass);
             }
         }
-        private Class getTypeClazz(Type type){
+
+        /**
+         * 拆箱方法
+         *
+         * @return
+         */
+        public String unboxingMethodString(Class className) {
+            if (className.equals(java.lang.Integer.class)) {
+                return "intValue";
+            } else if (className.equals(java.lang.Byte.class)) {
+                return "byteValue";
+            } else if (className.equals(java.lang.Long.class)) {
+                return "longValue";
+            } else if (className.equals(java.lang.Double.class)) {
+                return "doubleValue";
+            } else if (className.equals(java.lang.Float.class)) {
+                return "floatValue";
+            } else if (className.equals(java.lang.Character.class)) {
+                return "charValue";
+            } else if (className.equals(java.lang.Short.class)) {
+                return "shortValue";
+            } else if (className.equals(java.lang.Boolean.class)) {
+                return "booleanValue";
+            }
+            return null;
+        }
+
+        private Class getTypeClazz(Type type) {
             switch (type.getSort()) {
                 case Type.VOID:
                     return Void.class;
@@ -275,6 +369,24 @@ public abstract class BeanUtilsCopier {
                 default:
                     return null;
             }
+        }
+
+        /**
+         * 获取装箱方法
+         *
+         * @param clazz
+         * @return
+         */
+        public Method boxingMethod(Class<?> clazz) {
+            // 获取包装类信息
+            Class typeClazz = getTypeClazz(Type.getType(clazz));
+            try {
+                Method valueOf = ReflectUtils.findDeclaredMethod(typeClazz, "valueOf", new Class[]{clazz});
+                return valueOf;
+            } catch (NoSuchMethodException ex) {
+                ex.printStackTrace();
+            }
+            return null;
         }
 
         private static boolean compatible(PropertyDescriptor getter, PropertyDescriptor setter) {
