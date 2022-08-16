@@ -24,4 +24,8 @@ public class UserDO {
     private BigDecimal marketPrice;
     private LocalDateTime time;
     private TypeName type;
+    private String[] strings;
+    private Role role;
+    private List<Role> roles;
+    private byte[] bytes;
 }

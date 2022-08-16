@@ -18,9 +18,13 @@ public class UserDTO {
     private Integer id;
     private String name;
     private String address;
-    private List<Long> ids;
+    private List<Integer> ids;
     private Double price;
     private BigDecimal marketPrice;
     private Long time;
     private String type;
+    private String[] strings;
+    private Role role;
+    private byte[] bytes;
+    private List<Role> roles;
 }
