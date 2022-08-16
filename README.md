@@ -6,6 +6,52 @@
 > 默认支持同名同类型(含包装类)属性赋值,不同名需要设置nameMapping，字段忽略需要设置ignoreSet，
 > 类型不同需要设置类型转换链(默认set NULL)。
 > 详细用法请查看example
+## 配置
+
+### 默认配置
+
+`FastBeanCopier.globalFastBeanStrategy`
+
+- 不允许设置空值
+- 不允许覆盖值
+- 浅拷贝
+- 类型不一致需自定义转换
+- 泛型安全检查
+
+### 修改全局配置
+
+```java
+FastBeanStrategy fastBeanStrategy = new FastBeanStrategy();
+        fastBeanStrategy.setCopyStrategy(StrategyConstant.DEEP_COPY);
+        fastBeanStrategy.setSetNullStrategy(StrategyConstant.CAN_SET_NULL);
+// 设置全局策略 是否设置空值 是否覆盖 是否深拷贝
+FastBeanCopier.setGlobalFastBeanStrategy(fastBeanStrategy);
+```
+
+### 局部配置
+
+```java
+BeanCopyUtil.chain(userDO, userDTO)
+  // 允许值覆盖 单次生效
+  .canCover() 
+  // 允许设置控制 单次生效
+  .canSetNull()
+  // 深拷贝 单次生效
+  .isDeep(true)
+  .copy();
+```
+
+### 深拷贝规则
+
+1.实现`FastCloneable`接口，属性值是浅拷贝。`Object.clone()`
+
+2.拷贝失败尝试序列化方式
+
+3.否则是浅拷贝
+
+`FastBeanStrategy#deepCopy`
+
+
 ## 特点
 - 基于字节码技术。
 - 属性名映射,属性忽略。
@@ -36,7 +82,7 @@ System.setProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY, "./proxyOutput"
 <dependency>
     <groupId>io.github.cqpsjsl</groupId>
     <artifactId>fastbean</artifactId>
-    <version>2.0</version>
+    <version>2.0.1</version>
 </dependency>
 
 ```
@@ -110,6 +156,3 @@ public class TypeConverter
     }
 }
 ```
-# 性能比较
-> 基于spring stopWatch 进行性能比较，mapstruct肯定比不过。
-![输入图片说明](https://images.gitee.com/uploads/images/2021/1212/235044_f4dd9d77_7650717.png "屏幕截图.png")
