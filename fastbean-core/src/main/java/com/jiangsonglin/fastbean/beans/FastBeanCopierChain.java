@@ -38,6 +38,16 @@ public class FastBeanCopierChain<S, T> {
      */
     private Integer coverStrategy = null;
 
+    /**
+     * 深拷贝
+     */
+    private Integer deeCopyStrategy = null;
+
+    /**
+     * 局部策略
+     */
+    FastBeanStrategy partStrategy = null;
+
     public FastBeanCopierChain(S srcObject, T targetObject) {
         this.srcObject = srcObject;
         this.targetObject = targetObject;
@@ -110,6 +120,24 @@ public class FastBeanCopierChain<S, T> {
         return this;
     }
     /**
+     * 是否深拷贝。（不影响全局）
+     * @param isDeep true 开启深拷贝
+     * @return
+     */
+    public FastBeanCopierChain<S, T> isDeep(boolean isDeep) {
+        this.deeCopyStrategy = isDeep ? StrategyConstant.DEEP_COPY : StrategyConstant.SHALLOW_COPY;
+        return this;
+    }
+    /**
+     * 策略。（不影响全局）
+     * @param strategy 局部策略
+     * @return
+     */
+    public FastBeanCopierChain<S, T> strategy(FastBeanStrategy strategy) {
+        this.partStrategy = strategy;
+        return this;
+    }
+    /**
      * 复制
      *
      * @return
@@ -122,15 +150,17 @@ public class FastBeanCopierChain<S, T> {
             throw new NullPointerException("targetObject cant not be null");
         }
         FastBeanCopier fastBeanCopier = FastBeanCopierHelper.create(srcObject.getClass(), targetObject.getClass(), nameMappingWrapper, ignoreWrapper);
-        FastBeanStrategy partStrategy = null;
         // 局部自定义
-        if (coverStrategy != null || setNullStrategy != null) {
+        if (coverStrategy != null || setNullStrategy != null || deeCopyStrategy != null) {
             partStrategy = new FastBeanStrategy();
             if (coverStrategy != null) {
-                partStrategy.coverStrategy = coverStrategy;
+                partStrategy.setCoverStrategy(coverStrategy);
             }
             if (setNullStrategy != null) {
-                partStrategy.setNullStrategy = setNullStrategy;
+                partStrategy.setSetNullStrategy(setNullStrategy);
+            }
+            if (deeCopyStrategy != null) {
+                partStrategy.setCopyStrategy(deeCopyStrategy);
             }
         }
         if (partConverterChain != null) {

@@ -27,6 +27,14 @@ public final class StrategyConstant {
      * 允许覆盖 a.set(b.get())
      */
     public static final Integer CAN_SET_COVER = 1;
+    /**
+     * 浅拷贝
+     */
+    public static final Integer SHALLOW_COPY = 0;
+    /**
+     * 深拷贝
+     */
+    public static final Integer DEEP_COPY = 1;
 
 
 }
