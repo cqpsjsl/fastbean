@@ -7,7 +7,7 @@
     <groupId>io.github.cqpsjsl</groupId>
     <artifactId>fastBean-parent</artifactId>
     <packaging>pom</packaging>
-    <version>2.0.1</version>
+    <version>${fastbean.version}</version>
     <modules>
         <module>fastbean-example</module>
         <module>fastbean-core</module>
@@ -16,6 +16,7 @@
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
+        <fastbean.version>2.0.2</fastbean.version>
     </properties>
     <dependencyManagement>
         <dependencies>
