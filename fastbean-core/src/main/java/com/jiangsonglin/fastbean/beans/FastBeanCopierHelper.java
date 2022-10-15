@@ -75,11 +75,13 @@ public class FastBeanCopierHelper {
         }
         String key = buffer.toString();
         SoftReference<FastBeanCopier> softReference = BEAN_COPY_CACHE.get(key);
-        if (softReference == null) {
+        FastBeanCopier fastBeanCopier;
+        // fix softReference.get() NPL 2.0.2
+        if (softReference == null || (fastBeanCopier = softReference.get()) == null) {
             FastBeanCopier copier = BeanUtilsCopier.create(srcClass, targetClass, nameMapping, ignoreSet);
             BEAN_COPY_CACHE.put(key, new SoftReference<>(copier));
             return copier;
         }
-        return softReference.get();
+        return fastBeanCopier;
     }
 }
